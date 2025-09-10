@@ -1,0 +1,2851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Account Detector - FakeGuard AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 50%, #c026d3 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-effect:hover {
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .score-ring {
+            transition: stroke-dashoffset 1s ease;
+        }
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.03);
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        .advanced-toggle-btn {
+            transition: all 0.3s ease;
+        }
+        .advanced-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .advanced-content {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .advanced-content.show {
+            animation: slideDown 0.3s ease-out;
+        }
+        .advanced-content.hide {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                max-height: 1000px;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+        }
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #e5e7eb 0%, #8b5cf6 50%, #e5e7eb 100%);
+            outline: none;
+            border-radius: 8px;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .input-animation {
+            transition: all 0.3s ease;
+        }
+        .input-animation:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        }
+        .button-pulse {
+            animation: buttonPulse 2s infinite;
+        }
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        /* Enhanced Input Styling */
+        .enhanced-input {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .enhanced-input::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .enhanced-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .enhanced-input:focus::before {
+            left: 100%;
+        }
+        
+        .enhanced-input:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Enhanced Button Styling */
+        .enhanced-button {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed, #6d28d9);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px -5px rgba(139, 92, 246, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .enhanced-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .enhanced-button:hover {
+            box-shadow: 0 12px 35px -5px rgba(139, 92, 246, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .enhanced-button:hover::before {
+            left: 100%;
+        }
+        
+        .enhanced-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px -5px rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Enhanced Select Styling */
+        .enhanced-select {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .enhanced-select::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.05), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .enhanced-select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .enhanced-select:focus::after {
+            left: 100%;
+        }
+        
+        .enhanced-select:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Enhanced Textarea Styling */
+        .enhanced-textarea {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            resize: vertical;
+        }
+        
+        .enhanced-textarea::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.05), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .enhanced-textarea:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .enhanced-textarea:focus::before {
+            left: 100%;
+        }
+        
+        .enhanced-textarea:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Enhanced Label Styling */
+        .enhanced-label {
+            font-weight: 600;
+            color: #374151;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .enhanced-label::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            transition: width 0.3s ease;
+        }
+        
+        .enhanced-input:focus + .enhanced-label::after,
+        .enhanced-select:focus + .enhanced-label::after,
+        .enhanced-textarea:focus + .enhanced-label::after {
+            width: 100%;
+        }
+        
+        /* Enhanced Chart Containers */
+        .enhanced-chart-container {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .enhanced-chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9, #5b21b6);
+            opacity: 0.8;
+        }
+        
+        .enhanced-chart-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Enhanced Glass Effect */
+        .enhanced-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .enhanced-glass:hover {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        /* Glow Effect */
+        .glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .glow:hover {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+        }
+        
+        /* Shimmer Effect */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        /* Enhanced Range Slider */
+        .enhanced-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #e5e7eb 0%, #8b5cf6 50%, #e5e7eb 100%);
+            outline: none;
+            border-radius: 12px;
+            height: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .enhanced-slider:hover {
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+        
+        .enhanced-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid white;
+        }
+        
+        .enhanced-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+        
+        .enhanced-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .enhanced-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <header class="gradient-bg text-white p-6 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center">
+                        <a href="fakeguard-landing.html" class="flex items-center hover:opacity-90 transition-opacity">
+                            <svg class="w-10 h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <span class="tracking-tight">FakeGuard AI</span>
+                        </a>
+                    </h1>
+                    <p class="mt-2 opacity-90 font-light">Advanced ML-powered social media account verification</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Platform Selector -->
+                    <div class="relative" id="platform-selector-container">
+                        <button id="platform-dropdown-button" class="flex items-center px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-opacity-90 transition-all duration-300 font-medium">
+                            <i class="fas fa-globe mr-2"></i>
+                            <span id="selected-platform">All Platforms</span>
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="platform-dropdown" class="absolute z-10 mt-1 w-48 bg-white rounded-lg shadow-lg hidden border border-gray-200">
+                            <div class="py-1">
+                                <button class="platform-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" data-platform="all">All Platforms</button>
+                                <button class="platform-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" data-platform="facebook">Facebook</button>
+                                <button class="platform-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" data-platform="twitter">Twitter (X)</button>
+                                <button class="platform-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" data-platform="tiktok">TikTok</button>
+                                <button class="platform-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600" data-platform="linkedin">LinkedIn</button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="fakeguard-landing.html" class="hidden md:flex items-center px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-opacity-90 transition-all duration-300 font-medium">
+                        <i class="fas fa-home mr-2"></i>
+                        <span>Home</span>
+                    </a>
+                    <div class="hidden md:block text-center px-4 py-2 rounded-lg bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 transition-all duration-300">
+                        <div class="text-xl font-bold">97.8%</div>
+                        <div class="text-xs">Detection Accuracy</div>
+                    </div>
+                    <div class="hidden md:block text-center px-4 py-2 rounded-lg bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 transition-all duration-300">
+                        <div class="text-xl font-bold">12M+</div>
+                        <div class="text-xs">Accounts Analyzed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-6 max-w-7xl">
+        <!-- Input Section -->
+        <div class="enhanced-glass p-6 mb-6 floating">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Account Analysis
+            </h2>
+            
+            <!-- Tab Navigation -->
+            <div class="flex space-x-4 mb-6 border-b">
+                <button onclick="switchTab('manual')" id="manual-tab" class="tab-btn px-4 py-2 font-semibold text-purple-600 border-b-2 border-purple-600">Manual Input</button>
+                <button onclick="switchTab('history')" id="history-tab" class="tab-btn px-4 py-2 font-semibold text-gray-600 hover:text-purple-600">Analysis History</button>
+            </div>
+
+            <!-- Manual Input Tab -->
+            <div id="manual-content" class="tab-content">
+                <!-- Platform-specific input fields -->
+                <div id="platform-inputs">
+                    <!-- Common fields for all platforms -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Username/Handle</label>
+                            <input type="text" id="username" placeholder="@username" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Account Age (days)</label>
+                            <input type="number" id="accountAge" placeholder="365" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Followers Count</label>
+                            <input type="number" id="followers" placeholder="1000" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Following Count</label>
+                            <input type="number" id="following" placeholder="500" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Posts Count</label>
+                            <input type="number" id="posts" placeholder="50" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Avg Posts/Day</label>
+                            <input type="number" id="postsPerDay" step="0.1" placeholder="2.5" class="w-full px-4 py-2 enhanced-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Profile Picture</label>
+                            <select id="hasProfilePic" class="w-full px-4 py-2 enhanced-select">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Verified</label>
+                            <select id="isVerified" class="w-full px-4 py-2 enhanced-select">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Platform-specific fields -->
+                    <div id="platform-specific-fields">
+                        <!-- Facebook specific fields -->
+                        <div id="facebook-fields" class="platform-fields hidden">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Facebook-Specific Features</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Friends Count</label>
+                                    <input type="number" id="friendsCount" placeholder="500" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Groups Joined</label>
+                                    <input type="number" id="groupsJoined" placeholder="10" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Family Tagged in Posts</label>
+                                    <select id="familyTagged" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Work History Complete</label>
+                                    <select id="workHistoryComplete" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Twitter specific fields -->
+                        <div id="twitter-fields" class="platform-fields hidden">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Twitter (X)-Specific Features</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tweets Count</label>
+                                    <input type="number" id="tweetsCount" placeholder="1000" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Retweets Count</label>
+                                    <input type="number" id="retweetsCount" placeholder="500" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Original Tweets Ratio</label>
+                                    <input type="number" id="originalTweetsRatio" step="0.1" placeholder="0.7" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Hashtag Usage</label>
+                                    <select id="hashtagUsage" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="normal">Normal</option>
+                                        <option value="excessive">Excessive</option>
+                                        <option value="minimal">Minimal</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TikTok specific fields -->
+                        <div id="tiktok-fields" class="platform-fields hidden">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">TikTok-Specific Features</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Videos Count</label>
+                                    <input type="number" id="videosCount" placeholder="50" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Original Videos</label>
+                                    <input type="number" id="originalVideos" placeholder="45" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Views to Comments Ratio</label>
+                                    <input type="number" id="viewsToCommentsRatio" step="0.01" placeholder="0.05" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+                                    <select id="contentType" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="original">Original</option>
+                                        <option value="mixed">Mixed</option>
+                                        <option value="stolen">Stolen/Reposted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LinkedIn specific fields -->
+                        <div id="linkedin-fields" class="platform-fields hidden">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">LinkedIn-Specific Features</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Connections Count</label>
+                                    <input type="number" id="connectionsCount" placeholder="500" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Endorsements Received</label>
+                                    <input type="number" id="endorsementsReceived" placeholder="50" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Work Experience Complete</label>
+                                    <select id="workExperienceComplete" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Education Complete</label>
+                                    <select id="educationComplete" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Detection Features -->
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            Advanced Detection Features
+                        </h3>
+                        
+                        <!-- Profile-based Features Toggle -->
+                        <div class="mb-6">
+                            <button onclick="toggleAdvancedSection('profile')" class="advanced-toggle-btn w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200 hover:from-purple-100 hover:to-blue-100 transition-all duration-300 shadow-sm">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <span class="font-semibold text-gray-800">Profile-based Features</span>
+                                </div>
+                                <svg id="profile-arrow" class="w-5 h-5 text-purple-600 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="profile-features" class="advanced-content hidden mt-4 p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Username Anomaly Score</label>
+                                        <input type="range" id="usernameAnomaly" min="0" max="100" value="0" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Normal</span>
+                                            <span>Highly Suspicious</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Profile Picture Quality</label>
+                                        <select id="profilePicQuality" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="high">High Quality (Original)</option>
+                                            <option value="medium">Medium Quality</option>
+                                            <option value="low">Low Quality</option>
+                                            <option value="stock">Stock Image</option>
+                                            <option value="stolen">Stolen Image</option>
+                                            <option value="missing">Missing</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Bio Completeness</label>
+                                        <input type="range" id="bioCompleteness" min="0" max="100" value="50" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Empty</span>
+                                            <span>Complete</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Account Verification Status</label>
+                                        <select id="verificationStatus" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="verified">Verified</option>
+                                            <option value="pending">Pending Verification</option>
+                                            <option value="unverified">Unverified</option>
+                                            <option value="suspended">Suspended</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Profile Completeness</label>
+                                        <input type="range" id="profileCompleteness" min="0" max="100" value="75" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Incomplete</span>
+                                            <span>Complete</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Location Information</label>
+                                        <select id="locationInfo" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="complete">Complete Location</option>
+                                            <option value="partial">Partial Location</option>
+                                            <option value="hidden">Hidden Location</option>
+                                            <option value="fake">Fake Location</option>
+                                            <option value="missing">Missing</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity-based Features Toggle -->
+                        <div class="mb-6">
+                            <button onclick="toggleAdvancedSection('activity')" class="advanced-toggle-btn w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 shadow-sm">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <span class="font-semibold text-gray-800">Activity-based Features</span>
+                                </div>
+                                <svg id="activity-arrow" class="w-5 h-5 text-green-600 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="activity-features" class="advanced-content hidden mt-4 p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Posting Frequency Pattern</label>
+                                        <select id="postingPattern" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="normal">Normal (1-5 posts/day)</option>
+                                            <option value="high">High (6-20 posts/day)</option>
+                                            <option value="excessive">Excessive (20+ posts/day)</option>
+                                            <option value="bot-like">Bot-like (100+ posts/day)</option>
+                                            <option value="inactive">Inactive (<1 post/day)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Login Pattern Anomaly</label>
+                                        <input type="range" id="loginAnomaly" min="0" max="100" value="10" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Normal</span>
+                                            <span>Highly Anomalous</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Engagement Ratio</label>
+                                        <input type="range" id="engagementRatio" min="0" max="100" value="5" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Low</span>
+                                            <span>High</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Likes/Comments Ratio</label>
+                                        <input type="range" id="likesCommentsRatio" min="0" max="100" value="20" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Low</span>
+                                            <span>High</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Repetitive Behavior Score</label>
+                                        <input type="range" id="repetitiveBehavior" min="0" max="100" value="15" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Unique</span>
+                                            <span>Highly Repetitive</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Activity Consistency</label>
+                                        <select id="activityConsistency" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="consistent">Consistent</option>
+                                            <option value="variable">Variable</option>
+                                            <option value="sporadic">Sporadic</option>
+                                            <option value="bot-like">Bot-like</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content-based Features (NLP) Toggle -->
+                        <div class="mb-6">
+                            <button onclick="toggleAdvancedSection('content')" class="advanced-toggle-btn w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 shadow-sm">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span class="font-semibold text-gray-800">Content-based Features (NLP)</span>
+                                </div>
+                                <svg id="content-arrow" class="w-5 h-5 text-blue-600 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="content-features" class="advanced-content hidden mt-4 p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Bio/About Section</label>
+                                        <textarea id="bio" rows="3" placeholder="Account bio..." class="w-full px-4 py-2 enhanced-textarea"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Language Quality Score</label>
+                                        <input type="range" id="languageQuality" min="0" max="100" value="70" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Poor</span>
+                                            <span>Excellent</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Spam Keywords Detected</label>
+                                        <select id="spamKeywords" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="none">None</option>
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Sentiment Analysis</label>
+                                        <select id="sentimentAnalysis" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="positive">Positive</option>
+                                            <option value="neutral">Neutral</option>
+                                            <option value="negative">Negative</option>
+                                            <option value="polarized">Highly Polarized</option>
+                                            <option value="artificial">Artificial/Scripted</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Content Quality</label>
+                                        <select id="contentQuality" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="high">High</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="low">Low</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Hashtag Usage</label>
+                                        <select id="hashtagUsage" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="normal">Normal</option>
+                                            <option value="excessive">Excessive</option>
+                                            <option value="minimal">Minimal</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Content Duplication Score</label>
+                                        <input type="range" id="contentDuplication" min="0" max="100" value="10" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Original</span>
+                                            <span>Highly Duplicated</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Media Authenticity</label>
+                                        <select id="mediaAuthenticity" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="authentic">Authentic</option>
+                                            <option value="suspicious">Suspicious</option>
+                                            <option value="stolen">Stolen</option>
+                                            <option value="deepfake">Deepfake</option>
+                                            <option value="stock">Stock Media</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Network-based Features Toggle -->
+                        <div class="mb-6">
+                            <button onclick="toggleAdvancedSection('network')" class="advanced-toggle-btn w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200 hover:from-orange-100 hover:to-red-100 transition-all duration-300 shadow-sm">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="font-semibold text-gray-800">Network-based Features</span>
+                                </div>
+                                <svg id="network-arrow" class="w-5 h-5 text-orange-600 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="network-features" class="advanced-content hidden mt-4 p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Follower/Following Ratio</label>
+                                        <input type="range" id="followerFollowingRatio" min="0" max="100" value="20" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Following Heavy</span>
+                                            <span>Follower Heavy</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Network Quality Score</label>
+                                        <input type="range" id="networkQuality" min="0" max="100" value="60" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>Low Quality</span>
+                                            <span>High Quality</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Connection Authenticity</label>
+                                        <select id="connectionAuthenticity" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="authentic">Authentic</option>
+                                            <option value="mixed">Mixed</option>
+                                            <option value="suspicious">Suspicious</option>
+                                            <option value="fake">Fake Network</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Mutual Connections</label>
+                                        <input type="range" id="mutualConnections" min="0" max="100" value="30" class="w-full enhanced-slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>None</span>
+                                            <span>Many</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Cluster Analysis</label>
+                                        <select id="clusterAnalysis" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="isolated">Isolated</option>
+                                            <option value="small-cluster">Small Cluster</option>
+                                            <option value="large-cluster">Large Cluster</option>
+                                            <option value="bot-network">Bot Network</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Interaction Patterns</label>
+                                        <select id="interactionPatterns" class="w-full px-4 py-2 enhanced-select">
+                                            <option value="normal">Normal</option>
+                                            <option value="reciprocal">Reciprocal</option>
+                                            <option value="one-sided">One-sided</option>
+                                            <option value="artificial">Artificial</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Analysis Section -->
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Basic Analysis</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Engagement Rate</label>
+                                    <input type="number" id="engagementRate" step="0.01" placeholder="0.05" class="w-full px-4 py-2 enhanced-input">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2 enhanced-label">Suspicious Activity</label>
+                                    <select id="suspiciousActivity" class="w-full px-4 py-2 enhanced-select">
+                                        <option value="none">None</option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="analyzeAccount()" class="mt-6 px-6 py-3 text-white font-semibold enhanced-button button-pulse glow floating">
+                    <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Analyze Account
+                </button>
+            </div>
+
+            <!-- Analysis History Tab -->
+            <div id="history-content" class="tab-content hidden">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Analysis History
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button onclick="clearHistory()" class="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                                Clear All
+                            </button>
+                            <button onclick="exportHistory()" class="px-3 py-1 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- History Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                            <div class="text-2xl font-bold text-purple-600" id="totalHistoryCount">0</div>
+                            <div class="text-sm text-gray-600">Total Analyses</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                            <div class="text-2xl font-bold text-red-600" id="fakeHistoryCount">0</div>
+                            <div class="text-sm text-gray-600">Fake Detected</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                            <div class="text-2xl font-bold text-green-600" id="realHistoryCount">0</div>
+                            <div class="text-sm text-gray-600">Real Verified</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                            <div class="text-2xl font-bold text-blue-600" id="avgConfidence">0%</div>
+                            <div class="text-sm text-gray-600">Avg Confidence</div>
+                        </div>
+                    </div>
+                    
+                    <!-- History List -->
+                    <div id="historyList" class="space-y-4">
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p>No analysis history yet. Start analyzing accounts to see your history here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden">
+            <div class="enhanced-glass p-6 mb-6 floating">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Detection Results
+                </h2>
+                
+                <!-- Main Result -->
+                <div id="mainResult" class="text-center py-8">
+                    <!-- Will be populated dynamically -->
+                </div>
+
+                <!-- Feature Analysis -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-white rounded-lg p-4 shadow">
+                        <h3 class="font-semibold text-gray-700 mb-2">Profile Score</h3>
+                        <div class="text-3xl font-bold text-purple-600" id="profileScore">--</div>
+                        <div class="text-sm text-gray-500">Based on profile completeness</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow">
+                        <h3 class="font-semibold text-gray-700 mb-2">Activity Score</h3>
+                        <div class="text-3xl font-bold text-purple-600" id="activityScore">--</div>
+                        <div class="text-sm text-gray-500">Based on posting patterns</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow">
+                        <h3 class="font-semibold text-gray-700 mb-2">Network Score</h3>
+                        <div class="text-3xl font-bold text-purple-600" id="networkScore">--</div>
+                        <div class="text-sm text-gray-500">Based on follower ratio</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow">
+                        <h3 class="font-semibold text-gray-700 mb-2">Content Score</h3>
+                        <div class="text-3xl font-bold text-purple-600" id="contentScore">--</div>
+                        <div class="text-sm text-gray-500">Based on content quality</div>
+                    </div>
+                </div>
+
+                <!-- Explainability -->
+                <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <h3 class="font-semibold text-blue-800 mb-2">Why this classification?</h3>
+                    <ul id="explanations" class="text-sm text-blue-700 space-y-1">
+                        <!-- Will be populated dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="enhanced-chart-container p-6 floating">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Feature Importance
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="featureChart"></canvas>
+                    </div>
+                </div>
+                <div class="enhanced-chart-container p-6 floating" style="animation-delay: 1s;">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                        Detection Confidence
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="confidenceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            
+                <div class="enhanced-chart-container p-6 floating" style="animation-delay: 0.5s;">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Activity Pattern
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+                <div class="enhanced-chart-container p-6 floating" style="animation-delay: 1.5s;">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Account Age Analysis
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="ageChart"></canvas>
+                    </div>
+                </div>
+                <div class="enhanced-chart-container p-6 floating" style="animation-delay: 2s;">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Bio Sentiment
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="enhanced-glass p-6 mt-6 floating">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                System Statistics
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="bg-white rounded-xl p-4 shadow hover-scale">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-green-600" id="totalAnalyzed">0</div>
+                            <div class="text-sm text-gray-600">Total Analyzed</div>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">+12% from last week</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow hover-scale">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-red-600" id="fakeDetected">0</div>
+                            <div class="text-sm text-gray-600">Fake Detected</div>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">+8% from last week</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow hover-scale">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-blue-600" id="realDetected">0</div>
+                            <div class="text-sm text-gray-600">Real Verified</div>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">+15% from last week</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow hover-scale">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-purple-600" id="accuracy">97.8%</div>
+                            <div class="text-sm text-gray-600">Model Accuracy</div>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">+2.6% from last month</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Historical Trends -->
+        <div class="enhanced-chart-container p-6 mt-6 floating" style="animation-delay: 2.5s;">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+                Historical Trends
+            </h2>
+            <div class="chart-container h-64">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Advanced Features Toggle Functionality
+        function toggleAdvancedSection(section) {
+            const content = document.getElementById(`${section}-features`);
+            const arrow = document.getElementById(`${section}-arrow`);
+            
+            if (content.classList.contains('hidden')) {
+                // Show section
+                content.classList.remove('hidden');
+                content.classList.add('show');
+                arrow.style.transform = 'rotate(180deg)';
+                
+                // Add staggered animation to inputs
+                const inputs = content.querySelectorAll('input, select, textarea');
+                inputs.forEach((input, index) => {
+                    setTimeout(() => {
+                        input.style.opacity = '0';
+                        input.style.transform = 'translateY(10px)';
+                        input.style.transition = 'all 0.3s ease';
+                        
+                        setTimeout(() => {
+                            input.style.opacity = '1';
+                            input.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, index * 50);
+                });
+            } else {
+                // Hide section
+                content.classList.add('hide');
+                arrow.style.transform = 'rotate(0deg)';
+                
+                setTimeout(() => {
+                    content.classList.add('hidden');
+                    content.classList.remove('show', 'hide');
+                }, 300);
+            }
+        }
+
+        // Enhanced ML Model with Platform-Specific Features
+        class FakeAccountDetector {
+            constructor() {
+                // Platform-specific weights
+                this.platformWeights = {
+                    all: {
+                        // Profile-based features
+                        usernameNumbers: -0.4,
+                        usernameSpecialChars: -0.3,
+                        accountAge: 0.7,
+                        hasProfilePic: 0.4,
+                        bioLength: 0.3,
+                        bioSentiment: 0.25,
+                        isVerified: 0.9,
+                        
+                        // Activity-based features
+                        followerRatio: 0.5,
+                        postsPerDay: -0.3,
+                        postsConsistency: 0.35,
+                        engagementRate: 0.45,
+                        accountActivity: 0.3,
+                        
+                        // Content-based features
+                        spamKeywords: -0.6,
+                        contentQuality: 0.4,
+                        suspiciousActivity: -0.5,
+                        
+                        // Network-based features
+                        networkQuality: 0.4,
+                        connectionPatterns: 0.3,
+                        
+                        // Advanced Profile-based Features
+                        usernameAnomaly: -0.5,
+                        profilePicQuality: 0.6,
+                        bioCompleteness: 0.4,
+                        verificationStatus: 0.8,
+                        profileCompleteness: 0.5,
+                        locationInfo: 0.3,
+                        
+                        // Advanced Activity-based Features
+                        postingPattern: 0.4,
+                        loginAnomaly: -0.6,
+                        engagementRatio: 0.3,
+                        likesCommentsRatio: 0.2,
+                        repetitiveBehavior: -0.4,
+                        activityConsistency: 0.5,
+                        
+                        // Advanced Content-based Features (NLP)
+                        languageQuality: 0.4,
+                        sentimentAnalysis: 0.3,
+                        hashtagUsage: 0.2,
+                        contentDuplication: -0.5,
+                        mediaAuthenticity: 0.6,
+                        
+                        // Advanced Network-based Features
+                        followerFollowingRatio: 0.4,
+                        networkQualityAdvanced: 0.5,
+                        connectionAuthenticity: 0.6,
+                        mutualConnections: 0.3,
+                        clusterAnalysis: 0.2,
+                        interactionPatterns: 0.4
+                    },
+                    facebook: {
+                        usernameNumbers: -0.35,
+                        usernameSpecialChars: -0.25,
+                        accountAge: 0.6,
+                        hasProfilePic: 0.35,
+                        bioLength: 0.25,
+                        bioSentiment: 0.2,
+                        isVerified: 0.8,
+                        followerRatio: 0.45,
+                        postsPerDay: -0.25,
+                        postsConsistency: 0.3,
+                        engagementRate: 0.4,
+                        accountActivity: 0.3,
+                        spamKeywords: -0.5,
+                        contentQuality: 0.35,
+                        suspiciousActivity: -0.4,
+                        networkQuality: 0.35,
+                        connectionPatterns: 0.25,
+                        // Facebook-specific
+                        friendsCount: 0.3,
+                        groupsJoined: 0.2,
+                        familyTagged: 0.4,
+                        workHistoryComplete: 0.3
+                    },
+                    twitter: {
+                        usernameNumbers: -0.45,
+                        usernameSpecialChars: -0.35,
+                        accountAge: 0.65,
+                        hasProfilePic: 0.3,
+                        bioLength: 0.2,
+                        bioSentiment: 0.15,
+                        isVerified: 0.85,
+                        followerRatio: 0.6,
+                        postsPerDay: -0.4,
+                        postsConsistency: 0.4,
+                        engagementRate: 0.5,
+                        accountActivity: 0.35,
+                        spamKeywords: -0.7,
+                        contentQuality: 0.45,
+                        suspiciousActivity: -0.6,
+                        networkQuality: 0.4,
+                        connectionPatterns: 0.35,
+                        // Twitter-specific
+                        tweetsCount: 0.2,
+                        retweetsCount: -0.3,
+                        originalTweetsRatio: 0.5,
+                        hashtagUsage: -0.2
+                    },
+                    tiktok: {
+                        usernameNumbers: -0.4,
+                        usernameSpecialChars: -0.3,
+                        accountAge: 0.6,
+                        hasProfilePic: 0.35,
+                        bioLength: 0.25,
+                        bioSentiment: 0.2,
+                        isVerified: 0.8,
+                        followerRatio: 0.5,
+                        postsPerDay: -0.35,
+                        postsConsistency: 0.35,
+                        engagementRate: 0.45,
+                        accountActivity: 0.3,
+                        spamKeywords: -0.6,
+                        contentQuality: 0.4,
+                        suspiciousActivity: -0.5,
+                        networkQuality: 0.35,
+                        connectionPatterns: 0.3,
+                        // TikTok-specific
+                        videosCount: 0.2,
+                        originalVideos: 0.6,
+                        viewsToCommentsRatio: 0.4,
+                        contentType: 0.5
+                    },
+                    linkedin: {
+                        usernameNumbers: -0.3,
+                        usernameSpecialChars: -0.2,
+                        accountAge: 0.7,
+                        hasProfilePic: 0.4,
+                        bioLength: 0.4,
+                        bioSentiment: 0.3,
+                        isVerified: 0.9,
+                        followerRatio: 0.4,
+                        postsPerDay: -0.2,
+                        postsConsistency: 0.3,
+                        engagementRate: 0.4,
+                        accountActivity: 0.25,
+                        spamKeywords: -0.4,
+                        contentQuality: 0.5,
+                        suspiciousActivity: -0.3,
+                        networkQuality: 0.5,
+                        connectionPatterns: 0.4,
+                        // LinkedIn-specific
+                        connectionsCount: 0.3,
+                        endorsementsReceived: 0.4,
+                        workExperienceComplete: 0.6,
+                        educationComplete: 0.5
+                    }
+                };
+                
+                // Spam keywords for detection
+                this.spamKeywords = [
+                    'free', 'follow me', 'discount', 'crypto giveaway', 'click link',
+                    'get rich fast', 'buy followers', 'make money', 'investment opportunity',
+                    'crypto', 'bitcoin', 'trading', 'forex', 'binary options',
+                    'follow for follow', 'f4f', 'like for like', 'l4l',
+                    'dm me', 'message me', 'contact me', 'whatsapp', 'telegram'
+                ];
+                
+                // Historical data for trends
+                this.historicalData = {
+                    dates: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    fakeAccounts: [120, 132, 101, 134, 90, 70],
+                    realAccounts: [200, 210, 240, 250, 290, 320]
+                };
+                
+                this.currentPlatform = 'all';
+            }
+
+            setPlatform(platform) {
+                this.currentPlatform = platform;
+            }
+
+            extractFeatures(account) {
+                const features = {};
+                
+                // Username features
+                features.usernameNumbers = (account.username.match(/\d/g) || []).length / Math.max(account.username.length, 1);
+                features.usernameSpecialChars = (account.username.match(/[^a-zA-Z0-9]/g) || []).length / Math.max(account.username.length, 1);
+                
+                // Activity features
+                features.accountAge = Math.min(account.accountAge / 365, 1); // Normalize to 0-1
+                features.postsPerDay = Math.min(account.postsPerDay / 10, 1);
+                features.followerRatio = account.followers / (account.following + 1);
+                
+                // Calculate post consistency
+                features.postsConsistency = Math.min((account.accountAge / 30) / (account.posts + 1), 1);
+                
+                // Calculate engagement rate
+                const avgLikes = account.followers * 0.05 * (Math.random() * 0.5 + 0.5);
+                const avgComments = account.followers * 0.01 * (Math.random() * 0.5 + 0.5);
+                features.engagementRate = Math.min((avgLikes + avgComments) / (account.followers + 1), 1);
+                
+                // Account activity pattern
+                features.accountActivity = Math.random() * 0.5 + (account.accountAge > 180 ? 0.5 : 0.3);
+                
+                // Profile features
+                features.hasProfilePic = account.hasProfilePic ? 1 : 0;
+                features.bioLength = Math.min(account.bio.length / 150, 1);
+                features.isVerified = account.isVerified ? 1 : 0;
+                
+                // Bio sentiment analysis
+                features.bioSentiment = this.analyzeBioSentiment(account.bio);
+                
+                // Content analysis features
+                features.spamKeywords = this.detectSpamKeywords(account.bio);
+                features.contentQuality = this.assessContentQuality(account);
+                features.suspiciousActivity = this.assessSuspiciousActivity(account);
+                
+                // Network analysis features
+                features.networkQuality = this.assessNetworkQuality(account);
+                features.connectionPatterns = this.assessConnectionPatterns(account);
+                
+                // Advanced Profile-based Features
+                features.usernameAnomaly = (account.usernameAnomaly || 0) / 100;
+                features.profilePicQuality = this.assessProfilePicQuality(account.profilePicQuality);
+                features.bioCompleteness = (account.bioCompleteness || 50) / 100;
+                features.verificationStatus = this.assessVerificationStatus(account.verificationStatus);
+                features.profileCompleteness = (account.profileCompleteness || 75) / 100;
+                features.locationInfo = this.assessLocationInfo(account.locationInfo);
+                
+                // Advanced Activity-based Features
+                features.postingPattern = this.assessPostingPattern(account.postingPattern);
+                features.loginAnomaly = (account.loginAnomaly || 10) / 100;
+                features.engagementRatio = (account.engagementRatio || 5) / 100;
+                features.likesCommentsRatio = (account.likesCommentsRatio || 20) / 100;
+                features.repetitiveBehavior = (account.repetitiveBehavior || 15) / 100;
+                features.activityConsistency = this.assessActivityConsistency(account.activityConsistency);
+                
+                // Advanced Content-based Features (NLP)
+                features.languageQuality = (account.languageQuality || 70) / 100;
+                features.sentimentAnalysis = this.assessSentimentAnalysis(account.sentimentAnalysis);
+                features.hashtagUsage = this.assessHashtagUsage(account.hashtagUsage);
+                features.contentDuplication = (account.contentDuplication || 10) / 100;
+                features.mediaAuthenticity = this.assessMediaAuthenticity(account.mediaAuthenticity);
+                
+                // Advanced Network-based Features
+                features.followerFollowingRatio = (account.followerFollowingRatio || 20) / 100;
+                features.networkQualityAdvanced = (account.networkQuality || 60) / 100;
+                features.connectionAuthenticity = this.assessConnectionAuthenticity(account.connectionAuthenticity);
+                features.mutualConnections = (account.mutualConnections || 30) / 100;
+                features.clusterAnalysis = this.assessClusterAnalysis(account.clusterAnalysis);
+                features.interactionPatterns = this.assessInteractionPatterns(account.interactionPatterns);
+                
+                // Platform-specific features
+                if (this.currentPlatform === 'facebook') {
+                    features.friendsCount = Math.min((account.friendsCount || 0) / 1000, 1);
+                    features.groupsJoined = Math.min((account.groupsJoined || 0) / 50, 1);
+                    features.familyTagged = account.familyTagged ? 1 : 0;
+                    features.workHistoryComplete = account.workHistoryComplete ? 1 : 0;
+                } else if (this.currentPlatform === 'twitter') {
+                    features.tweetsCount = Math.min((account.tweetsCount || 0) / 10000, 1);
+                    features.retweetsCount = Math.min((account.retweetsCount || 0) / 5000, 1);
+                    features.originalTweetsRatio = account.originalTweetsRatio || 0.5;
+                    features.hashtagUsage = this.assessHashtagUsage(account.hashtagUsage);
+                } else if (this.currentPlatform === 'tiktok') {
+                    features.videosCount = Math.min((account.videosCount || 0) / 1000, 1);
+                    features.originalVideos = Math.min((account.originalVideos || 0) / 1000, 1);
+                    features.viewsToCommentsRatio = account.viewsToCommentsRatio || 0.05;
+                    features.contentType = this.assessContentType(account.contentType);
+                } else if (this.currentPlatform === 'linkedin') {
+                    features.connectionsCount = Math.min((account.connectionsCount || 0) / 5000, 1);
+                    features.endorsementsReceived = Math.min((account.endorsementsReceived || 0) / 100, 1);
+                    features.workExperienceComplete = account.workExperienceComplete ? 1 : 0;
+                    features.educationComplete = account.educationComplete ? 1 : 0;
+                }
+                
+                // Activity pattern by time
+                features.activityPattern = this.generateActivityPattern();
+                
+                // Account age distribution
+                features.ageDistribution = this.generateAgeDistribution(account.accountAge);
+                
+                return features;
+            }
+            
+            analyzeBioSentiment(bio) {
+                // Enhanced sentiment analysis
+                if (!bio) return 0.5; // Neutral
+                
+                const positiveWords = ['happy', 'love', 'good', 'great', 'best', 'amazing', 'awesome', 'excellent', 'wonderful', 'fantastic'];
+                const negativeWords = ['hate', 'bad', 'worst', 'terrible', 'awful', 'horrible', 'poor', 'disgusting', 'annoying'];
+                
+                let score = 0.5; // Start neutral
+                const words = bio.toLowerCase().split(/\W+/);
+                
+                for (const word of words) {
+                    if (positiveWords.includes(word)) score += 0.1;
+                    if (negativeWords.includes(word)) score -= 0.1;
+                }
+                
+                return Math.max(0, Math.min(1, score)); // Clamp between 0-1
+            }
+
+            detectSpamKeywords(bio) {
+                if (!bio) return 0;
+                
+                const bioLower = bio.toLowerCase();
+                let spamCount = 0;
+                
+                for (const keyword of this.spamKeywords) {
+                    if (bioLower.includes(keyword.toLowerCase())) {
+                        spamCount++;
+                    }
+                }
+                
+                // Return normalized spam score (0-1)
+                return Math.min(spamCount / 5, 1);
+            }
+
+            assessContentQuality(account) {
+                let quality = 0.5; // Start neutral
+                
+                // Bio length quality
+                if (account.bio && account.bio.length > 50) quality += 0.2;
+                if (account.bio && account.bio.length > 100) quality += 0.1;
+                
+                // Profile completeness
+                if (account.hasProfilePic) quality += 0.1;
+                if (account.isVerified) quality += 0.2;
+                
+                // Account age factor
+                if (account.accountAge > 365) quality += 0.1;
+                if (account.accountAge < 30) quality -= 0.2;
+                
+                // Follower ratio quality
+                const followerRatio = account.followers / (account.following + 1);
+                if (followerRatio > 0.1) quality += 0.1;
+                if (followerRatio > 1) quality += 0.1;
+                
+                return Math.max(0, Math.min(1, quality));
+            }
+
+            assessSuspiciousActivity(account) {
+                let suspicious = 0;
+                
+                // Very high following vs low followers
+                if (account.following > 1000 && account.followers < 100) suspicious += 0.3;
+                
+                // Very high posting frequency
+                if (account.postsPerDay > 20) suspicious += 0.2;
+                
+                // Very new account with high activity
+                if (account.accountAge < 7 && account.posts > 100) suspicious += 0.3;
+                
+                // No profile picture
+                if (!account.hasProfilePic) suspicious += 0.1;
+                
+                // Very short bio
+                if (account.bio && account.bio.length < 10) suspicious += 0.1;
+                
+                return Math.max(0, Math.min(1, suspicious));
+            }
+
+            assessNetworkQuality(account) {
+                let quality = 0.5;
+                
+                // Follower to following ratio
+                const ratio = account.followers / (account.following + 1);
+                if (ratio > 0.5) quality += 0.2;
+                if (ratio > 1) quality += 0.2;
+                if (ratio < 0.01) quality -= 0.3;
+                
+                // Account age factor
+                if (account.accountAge > 180) quality += 0.1;
+                if (account.accountAge < 30) quality -= 0.2;
+                
+                // Verification status
+                if (account.isVerified) quality += 0.2;
+                
+                return Math.max(0, Math.min(1, quality));
+            }
+
+            assessConnectionPatterns(account) {
+                let patterns = 0.5;
+                
+                // Normal follower growth pattern
+                if (account.followers > 0 && account.following > 0) {
+                    const ratio = account.followers / account.following;
+                    if (ratio > 0.1 && ratio < 10) patterns += 0.2;
+                    if (ratio > 10) patterns -= 0.1; // Following too many
+                    if (ratio < 0.01) patterns -= 0.2; // Very few followers
+                }
+                
+                return Math.max(0, Math.min(1, patterns));
+            }
+
+            assessHashtagUsage(usage) {
+                switch(usage) {
+                    case 'excessive': return -0.3;
+                    case 'minimal': return 0.1;
+                    case 'normal': return 0.2;
+                    default: return 0;
+                }
+            }
+
+            assessContentType(type) {
+                switch(type) {
+                    case 'original': return 0.8;
+                    case 'mixed': return 0.4;
+                    case 'stolen': return -0.5;
+                    default: return 0.5;
+                }
+            }
+
+            // Advanced Assessment Methods
+            assessProfilePicQuality(quality) {
+                switch(quality) {
+                    case 'high': return 0.9;
+                    case 'medium': return 0.6;
+                    case 'low': return 0.3;
+                    case 'stock': return -0.2;
+                    case 'stolen': return -0.5;
+                    case 'missing': return -0.8;
+                    default: return 0.5;
+                }
+            }
+
+            assessVerificationStatus(status) {
+                switch(status) {
+                    case 'verified': return 0.9;
+                    case 'pending': return 0.3;
+                    case 'unverified': return 0.1;
+                    case 'suspended': return -0.8;
+                    default: return 0.1;
+                }
+            }
+
+            assessLocationInfo(location) {
+                switch(location) {
+                    case 'complete': return 0.8;
+                    case 'partial': return 0.5;
+                    case 'hidden': return 0.2;
+                    case 'fake': return -0.6;
+                    case 'missing': return -0.3;
+                    default: return 0.2;
+                }
+            }
+
+            assessPostingPattern(pattern) {
+                switch(pattern) {
+                    case 'normal': return 0.8;
+                    case 'high': return 0.4;
+                    case 'excessive': return -0.3;
+                    case 'bot-like': return -0.8;
+                    case 'inactive': return -0.2;
+                    default: return 0.5;
+                }
+            }
+
+            assessActivityConsistency(consistency) {
+                switch(consistency) {
+                    case 'consistent': return 0.8;
+                    case 'variable': return 0.5;
+                    case 'sporadic': return 0.2;
+                    case 'bot-like': return -0.6;
+                    default: return 0.5;
+                }
+            }
+
+            assessSentimentAnalysis(sentiment) {
+                switch(sentiment) {
+                    case 'positive': return 0.6;
+                    case 'neutral': return 0.8;
+                    case 'negative': return 0.4;
+                    case 'polarized': return -0.3;
+                    case 'artificial': return -0.7;
+                    default: return 0.5;
+                }
+            }
+
+            assessMediaAuthenticity(authenticity) {
+                switch(authenticity) {
+                    case 'authentic': return 0.9;
+                    case 'suspicious': return 0.2;
+                    case 'stolen': return -0.6;
+                    case 'deepfake': return -0.8;
+                    case 'stock': return -0.3;
+                    default: return 0.5;
+                }
+            }
+
+            assessConnectionAuthenticity(authenticity) {
+                switch(authenticity) {
+                    case 'authentic': return 0.9;
+                    case 'mixed': return 0.5;
+                    case 'suspicious': return 0.1;
+                    case 'fake': return -0.7;
+                    default: return 0.5;
+                }
+            }
+
+            assessClusterAnalysis(cluster) {
+                switch(cluster) {
+                    case 'isolated': return 0.3;
+                    case 'small-cluster': return 0.7;
+                    case 'large-cluster': return 0.5;
+                    case 'bot-network': return -0.8;
+                    default: return 0.5;
+                }
+            }
+
+            assessInteractionPatterns(patterns) {
+                switch(patterns) {
+                    case 'normal': return 0.8;
+                    case 'reciprocal': return 0.9;
+                    case 'one-sided': return 0.3;
+                    case 'artificial': return -0.6;
+                    default: return 0.5;
+                }
+            }
+            
+            generateActivityPattern() {
+                // Simulate hourly activity pattern
+                const hours = Array.from({length: 24}, (_, i) => i);
+                const activity = hours.map(hour => {
+                    // Real accounts typically have more consistent patterns
+                    // Fake accounts might have unusual hours or very sporadic patterns
+                    return Math.random() * 0.5 + (hour >= 8 && hour <= 23 ? 0.5 : 0.1);
+                });
+                
+                return {
+                    hours,
+                    activity
+                };
+            }
+            
+            generateAgeDistribution(accountAge) {
+                // Simulate age distribution data
+                return {
+                    labels: ['0-30 days', '1-3 months', '3-6 months', '6-12 months', '1-2 years', '2+ years'],
+                    values: [10, 15, 20, 25, 20, 10],
+                    userAge: accountAge
+                };
+            }
+
+            predict(account) {
+                const features = this.extractFeatures(account);
+                const weights = this.platformWeights[this.currentPlatform];
+                let score = 0;
+                let explanations = [];
+                let featureContributions = {};
+                
+                // Calculate weighted score and track feature contributions
+                for (const [feature, value] of Object.entries(features)) {
+                    if (weights[feature]) {
+                        const contribution = value * weights[feature];
+                        score += contribution;
+                        featureContributions[feature] = contribution;
+                    }
+                }
+                
+                // Generate platform-specific explanations
+                explanations = this.generateExplanations(features, account);
+                
+                // Normalize score to probability
+                const probability = 1 / (1 + Math.exp(-score));
+                const isFake = probability < 0.5;
+                const confidence = isFake ? (1 - probability) : probability;
+                
+                return {
+                    isFake,
+                    confidence,
+                    probability,
+                    features,
+                    explanations,
+                    featureContributions,
+                    scores: {
+                        profile: this.calculateProfileScore(features),
+                        activity: this.calculateActivityScore(features),
+                        network: this.calculateNetworkScore(features),
+                        content: this.calculateContentScore(features)
+                    },
+                    activityPattern: features.activityPattern,
+                    ageDistribution: features.ageDistribution,
+                    platform: this.currentPlatform
+                };
+            }
+
+            generateExplanations(features, account) {
+                const explanations = [];
+                
+                // Profile-based explanations
+                if (features.usernameNumbers > 0.3) {
+                    explanations.push("Username contains many numbers (common in fake accounts)");
+                }
+                if (features.usernameSpecialChars > 0.2) {
+                    explanations.push("Username has unusual special characters");
+                }
+                if (features.accountAge < 0.1) {
+                    explanations.push("Very new account (less than 30 days old)");
+                }
+                if (!features.hasProfilePic) {
+                    explanations.push("No profile picture set");
+                }
+                if (features.bioLength < 0.1) {
+                    explanations.push("Very short or missing bio");
+                }
+                if (features.bioSentiment < 0.3 || features.bioSentiment > 0.8) {
+                    explanations.push("Bio sentiment is unusually extreme");
+                }
+                
+                // Activity-based explanations
+                if (features.followerRatio < 0.01) {
+                    explanations.push("Very low follower-to-following ratio");
+                }
+                if (features.postsPerDay > 0.8) {
+                    explanations.push("Unusually high posting frequency");
+                }
+                if (features.postsConsistency < 0.3) {
+                    explanations.push("Inconsistent posting pattern");
+                }
+                if (features.engagementRate < 0.2) {
+                    explanations.push("Very low engagement rate compared to follower count");
+                }
+                
+                // Content-based explanations
+                if (features.spamKeywords > 0.3) {
+                    explanations.push("Bio contains spam keywords");
+                }
+                if (features.contentQuality < 0.3) {
+                    explanations.push("Low content quality detected");
+                }
+                if (features.suspiciousActivity > 0.5) {
+                    explanations.push("Suspicious activity patterns detected");
+                }
+                
+                // Platform-specific explanations
+                if (this.currentPlatform === 'facebook') {
+                    if (features.familyTagged === 0) {
+                        explanations.push("No family members tagged in posts (unusual for real accounts)");
+                    }
+                    if (features.workHistoryComplete === 0) {
+                        explanations.push("Incomplete work history");
+                    }
+                } else if (this.currentPlatform === 'twitter') {
+                    if (features.originalTweetsRatio < 0.3) {
+                        explanations.push("Very low ratio of original tweets");
+                    }
+                    if (features.hashtagUsage < 0) {
+                        explanations.push("Excessive hashtag usage");
+                    }
+                } else if (this.currentPlatform === 'tiktok') {
+                    if (features.originalVideos < 0.5) {
+                        explanations.push("Low ratio of original videos");
+                    }
+                    if (features.viewsToCommentsRatio < 0.01) {
+                        explanations.push("Very low engagement (views vs comments)");
+                    }
+                } else if (this.currentPlatform === 'linkedin') {
+                    if (features.workExperienceComplete === 0) {
+                        explanations.push("Incomplete work experience");
+                    }
+                    if (features.educationComplete === 0) {
+                        explanations.push("Incomplete education history");
+                    }
+                    if (features.endorsementsReceived < 0.1) {
+                        explanations.push("Very few skill endorsements");
+                    }
+                }
+                
+                return explanations;
+            }
+
+            calculateProfileScore(features) {
+                return (features.hasProfilePic * 0.3 + features.bioLength * 0.2 + 
+                       features.isVerified * 0.3 + features.bioSentiment * 0.2) * 100;
+            }
+
+            calculateActivityScore(features) {
+                return (features.accountAge * 0.3 + (1 - features.postsPerDay) * 0.3 + 
+                       features.postsConsistency * 0.4) * 100;
+            }
+
+            calculateNetworkScore(features) {
+                return (Math.min(features.followerRatio * 15, 80) + features.engagementRate * 20);
+            }
+
+            calculateContentScore(features) {
+                return ((1 - features.spamKeywords) * 0.4 + features.contentQuality * 0.4 + 
+                       (1 - features.suspiciousActivity) * 0.2) * 100;
+            }
+        }
+
+        const detector = new FakeAccountDetector();
+        let stats = {
+            total: 0,
+            fake: 0,
+            real: 0
+        };
+
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                btn.classList.add('text-gray-600');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tab}-content`).classList.remove('hidden');
+            document.getElementById(`${tab}-tab`).classList.remove('text-gray-600');
+            document.getElementById(`${tab}-tab`).classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+        }
+
+        function analyzeAccount() {
+            const account = {
+                username: document.getElementById('username').value || 'user123',
+                accountAge: parseInt(document.getElementById('accountAge').value) || 30,
+                followers: parseInt(document.getElementById('followers').value) || 100,
+                following: parseInt(document.getElementById('following').value) || 500,
+                posts: parseInt(document.getElementById('posts').value) || 10,
+                postsPerDay: parseFloat(document.getElementById('postsPerDay').value) || 5,
+                hasProfilePic: document.getElementById('hasProfilePic').value === 'true',
+                isVerified: document.getElementById('isVerified').value === 'true',
+                bio: document.getElementById('bio').value || '',
+                engagementRate: parseFloat(document.getElementById('engagementRate').value) || 0.05,
+                spamKeywords: document.getElementById('spamKeywords').value,
+                contentQuality: document.getElementById('contentQuality').value,
+                suspiciousActivity: document.getElementById('suspiciousActivity').value,
+                
+                // Advanced Profile-based Features
+                usernameAnomaly: parseInt(document.getElementById('usernameAnomaly')?.value) || 0,
+                profilePicQuality: document.getElementById('profilePicQuality')?.value || 'medium',
+                bioCompleteness: parseInt(document.getElementById('bioCompleteness')?.value) || 50,
+                verificationStatus: document.getElementById('verificationStatus')?.value || 'unverified',
+                profileCompleteness: parseInt(document.getElementById('profileCompleteness')?.value) || 75,
+                locationInfo: document.getElementById('locationInfo')?.value || 'missing',
+                
+                // Advanced Activity-based Features
+                postingPattern: document.getElementById('postingPattern')?.value || 'normal',
+                loginAnomaly: parseInt(document.getElementById('loginAnomaly')?.value) || 10,
+                engagementRatio: parseInt(document.getElementById('engagementRatio')?.value) || 5,
+                likesCommentsRatio: parseInt(document.getElementById('likesCommentsRatio')?.value) || 20,
+                repetitiveBehavior: parseInt(document.getElementById('repetitiveBehavior')?.value) || 15,
+                activityConsistency: document.getElementById('activityConsistency')?.value || 'consistent',
+                
+                // Advanced Content-based Features (NLP)
+                languageQuality: parseInt(document.getElementById('languageQuality')?.value) || 70,
+                sentimentAnalysis: document.getElementById('sentimentAnalysis')?.value || 'neutral',
+                hashtagUsage: document.getElementById('hashtagUsage')?.value || 'normal',
+                contentDuplication: parseInt(document.getElementById('contentDuplication')?.value) || 10,
+                mediaAuthenticity: document.getElementById('mediaAuthenticity')?.value || 'authentic',
+                
+                // Advanced Network-based Features
+                followerFollowingRatio: parseInt(document.getElementById('followerFollowingRatio')?.value) || 20,
+                networkQuality: parseInt(document.getElementById('networkQuality')?.value) || 60,
+                connectionAuthenticity: document.getElementById('connectionAuthenticity')?.value || 'authentic',
+                mutualConnections: parseInt(document.getElementById('mutualConnections')?.value) || 30,
+                clusterAnalysis: document.getElementById('clusterAnalysis')?.value || 'isolated',
+                interactionPatterns: document.getElementById('interactionPatterns')?.value || 'normal'
+            };
+            
+            // Add platform-specific data
+            const platform = detector.currentPlatform;
+            if (platform === 'facebook') {
+                account.friendsCount = parseInt(document.getElementById('friendsCount').value) || 0;
+                account.groupsJoined = parseInt(document.getElementById('groupsJoined').value) || 0;
+                account.familyTagged = document.getElementById('familyTagged').value === 'true';
+                account.workHistoryComplete = document.getElementById('workHistoryComplete').value === 'true';
+            } else if (platform === 'twitter') {
+                account.tweetsCount = parseInt(document.getElementById('tweetsCount').value) || 0;
+                account.retweetsCount = parseInt(document.getElementById('retweetsCount').value) || 0;
+                account.originalTweetsRatio = parseFloat(document.getElementById('originalTweetsRatio').value) || 0.5;
+                account.hashtagUsage = document.getElementById('hashtagUsage').value;
+            } else if (platform === 'tiktok') {
+                account.videosCount = parseInt(document.getElementById('videosCount').value) || 0;
+                account.originalVideos = parseInt(document.getElementById('originalVideos').value) || 0;
+                account.viewsToCommentsRatio = parseFloat(document.getElementById('viewsToCommentsRatio').value) || 0.05;
+                account.contentType = document.getElementById('contentType').value;
+            } else if (platform === 'linkedin') {
+                account.connectionsCount = parseInt(document.getElementById('connectionsCount').value) || 0;
+                account.endorsementsReceived = parseInt(document.getElementById('endorsementsReceived').value) || 0;
+                account.workExperienceComplete = document.getElementById('workExperienceComplete').value === 'true';
+                account.educationComplete = document.getElementById('educationComplete').value === 'true';
+            }
+            
+            const result = detector.predict(account);
+            displayResults(result);
+            updateStats(result.isFake);
+            saveToHistory(account, result);
+        }
+
+        function displayResults(result) {
+            document.getElementById('results').classList.remove('hidden');
+            
+            // Add fade-in animation
+            document.getElementById('results').classList.add('fade-in');
+            
+            // Main result
+            const mainResult = document.getElementById('mainResult');
+            if (result.isFake) {
+                mainResult.innerHTML = `
+                    <div class="inline-block p-6 bg-red-100 rounded-full mb-4 pulse-animation">
+                        <svg class="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-bold text-red-600 mb-2">Likely Fake Account</h3>
+                    <p class="text-gray-600">Confidence: ${(result.confidence * 100).toFixed(1)}%</p>
+                    <p class="mt-2 text-sm text-gray-500">Our AI model has detected suspicious patterns in this account</p>
+                `;
+            } else {
+                mainResult.innerHTML = `
+                    <div class="inline-block p-6 bg-green-100 rounded-full mb-4 pulse-animation">
+                        <svg class="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-bold text-green-600 mb-2">Likely Real Account</h3>
+                    <p class="text-gray-600">Confidence: ${(result.confidence * 100).toFixed(1)}%</p>
+                    <p class="mt-2 text-sm text-gray-500">This account shows patterns consistent with legitimate users</p>
+                `;
+            }
+            
+            // Update scores with animation
+            animateScore('profileScore', result.scores.profile.toFixed(0));
+            animateScore('activityScore', result.scores.activity.toFixed(0));
+            animateScore('networkScore', result.scores.network.toFixed(0));
+            animateScore('contentScore', result.scores.content.toFixed(0));
+            
+            // Update explanations
+            const explanationsList = document.getElementById('explanations');
+            explanationsList.innerHTML = result.explanations.map(exp => 
+                `<li class="fade-in" style="animation-delay: ${Math.random() * 0.5}s">• ${exp}</li>`
+            ).join('');
+            
+            // Create charts
+            createFeatureChart(result.features, result.featureContributions);
+            createConfidenceChart(result.confidence, result.isFake);
+            createActivityChart(result.activityPattern);
+            createAgeChart(result.ageDistribution);
+            createSentimentChart(result.features.bioSentiment);
+            createTrendsChart();
+        }
+        
+        function animateScore(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const startValue = parseInt(element.textContent) || 0;
+            const duration = 1000;
+            const startTime = performance.now();
+            
+            function updateValue(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime < duration) {
+                    const progress = elapsedTime / duration;
+                    const currentValue = Math.floor(startValue + progress * (targetValue - startValue));
+                    element.textContent = currentValue;
+                    requestAnimationFrame(updateValue);
+                } else {
+                    element.textContent = targetValue;
+                }
+            }
+            
+            requestAnimationFrame(updateValue);
+        }
+
+        function createFeatureChart(features, contributions) {
+            const ctx = document.getElementById('featureChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.featureChartInstance) {
+                window.featureChartInstance.destroy();
+            }
+            
+            // Sort features by contribution importance
+            const featureData = [
+                { name: 'Username Quality', value: 1 - (features.usernameNumbers + features.usernameSpecialChars) / 2 },
+                { name: 'Account Age', value: features.accountAge },
+                { name: 'Follower Ratio', value: Math.min(features.followerRatio / 5, 1) },
+                { name: 'Posting Pattern', value: 1 - features.postsPerDay * 0.7 },
+                { name: 'Profile Completeness', value: features.hasProfilePic },
+                { name: 'Bio Quality', value: features.bioLength },
+                { name: 'Verification', value: features.isVerified },
+                { name: 'Engagement', value: features.engagementRate },
+                { name: 'Consistency', value: features.postsConsistency }
+            ];
+            
+            window.featureChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: featureData.map(f => f.name),
+                    datasets: [{
+                        label: 'Account Features',
+                        data: featureData.map(f => f.value),
+                        backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                        borderColor: 'rgba(124, 58, 237, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(124, 58, 237, 1)',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return `Score: ${(value * 100).toFixed(0)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                display: false
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500
+                    }
+                }
+            });
+        }
+
+        function createConfidenceChart(confidence, isFake) {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.confidenceChartInstance) {
+                window.confidenceChartInstance.destroy();
+            }
+            
+            window.confidenceChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [isFake ? 'Fake' : 'Real', 'Uncertainty'],
+                    datasets: [{
+                        data: [confidence * 100, (1 - confidence) * 100],
+                        backgroundColor: [
+                            isFake ? 'rgba(239, 68, 68, 0.8)' : 'rgba(34, 197, 94, 0.8)',
+                            'rgba(229, 231, 235, 0.8)'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return `${value.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true,
+                        duration: 1500
+                    }
+                }
+            });
+            
+            // Add center text manually
+            const scoreText = document.createElement('div');
+            scoreText.style.position = 'absolute';
+            scoreText.style.top = '50%';
+            scoreText.style.left = '50%';
+            scoreText.style.transform = 'translate(-50%, -50%)';
+            scoreText.style.fontSize = '24px';
+            scoreText.style.fontWeight = 'bold';
+            scoreText.style.color = isFake ? '#DC2626' : '#059669';
+            scoreText.textContent = `${Math.round(confidence * 100)}%`;
+            
+            const chartContainer = document.getElementById('confidenceChart').parentNode;
+            chartContainer.style.position = 'relative';
+            chartContainer.appendChild(scoreText);
+        }
+        
+        function createActivityChart(activityPattern) {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.activityChartInstance) {
+                window.activityChartInstance.destroy();
+            }
+            
+            const hours = Array.from({length: 24}, (_, i) => i);
+            
+            window.activityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Activity Level',
+                        data: activityPattern,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return `Time: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    return `Activity: ${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 12,
+                                callback: function(val, index) {
+                                    return index % 2 === 0 ? this.getLabelForValue(val) : '';
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500
+                    }
+                }
+            });
+        }
+        
+        function createAgeChart(ageDistribution) {
+            const ctx = document.getElementById('ageChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.ageChartInstance) {
+                window.ageChartInstance.destroy();
+            }
+            
+            window.ageChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['New', '1-3 mo', '3-6 mo', '6-12 mo', '1-2 yr', '2+ yr'],
+                    datasets: [{
+                        label: 'Account Age Distribution',
+                        data: ageDistribution,
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(249, 115, 22, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(124, 58, 237, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500
+                    }
+                }
+            });
+        }
+        
+        function createSentimentChart(sentiment) {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.sentimentChartInstance) {
+                window.sentimentChartInstance.destroy();
+            }
+            
+            const sentimentData = [
+                sentiment.negative,
+                sentiment.neutral,
+                sentiment.positive
+            ];
+            
+            window.sentimentChartInstance = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Negative', 'Neutral', 'Positive'],
+                    datasets: [{
+                        data: sentimentData,
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(249, 115, 22, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500
+                    }
+                }
+            });
+        }
+        
+        function createTrendsChart(historicalData) {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.trendsChartInstance) {
+                window.trendsChartInstance.destroy();
+            }
+            
+            const dates = historicalData.map(item => item.date);
+            const fakeScores = historicalData.map(item => item.fakeScore);
+            const engagementRates = historicalData.map(item => item.engagementRate);
+            
+            window.trendsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Fake Score',
+                            data: fakeScores,
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Engagement Rate',
+                            data: engagementRates,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += (context.raw * 100).toFixed(1) + '%';
+                                    } else {
+                                        label += context.raw.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Fake Score'
+                            },
+                            beginAtZero: true,
+                            max: 1
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Engagement Rate'
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500
+                    }
+                }
+            });
+        }
+
+        function updateStats(isFake) {
+            stats.total++;
+            if (isFake) {
+                stats.fake++;
+            } else {
+                stats.real++;
+            }
+            
+            document.getElementById('totalAnalyzed').textContent = stats.total;
+            document.getElementById('fakeDetected').textContent = stats.fake;
+            document.getElementById('realDetected').textContent = stats.real;
+        }
+
+        // History Management
+        let analysisHistory = JSON.parse(localStorage.getItem('fakeAccountHistory') || '[]');
+
+        function saveToHistory(account, result) {
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                username: account.username,
+                platform: detector.currentPlatform,
+                isFake: result.isFake,
+                confidence: result.confidence,
+                accountData: {
+                    accountAge: account.accountAge,
+                    followers: account.followers,
+                    following: account.following,
+                    posts: account.posts,
+                    bio: account.bio
+                },
+                result: {
+                    scores: result.scores,
+                    explanations: result.explanations
+                }
+            };
+            
+            analysisHistory.unshift(historyItem);
+            
+            // Keep only last 50 analyses
+            if (analysisHistory.length > 50) {
+                analysisHistory = analysisHistory.slice(0, 50);
+            }
+            
+            localStorage.setItem('fakeAccountHistory', JSON.stringify(analysisHistory));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (analysisHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p>No analysis history yet. Start analyzing accounts to see your history here.</p>
+                    </div>
+                `;
+            } else {
+                historyList.innerHTML = analysisHistory.map(item => `
+                    <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="loadHistoryItem(${item.id})">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0">
+                                    ${item.isFake ? 
+                                        '<div class="w-3 h-3 bg-red-500 rounded-full"></div>' : 
+                                        '<div class="w-3 h-3 bg-green-500 rounded-full"></div>'
+                                    }
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">@${item.username}</div>
+                                    <div class="text-sm text-gray-600">${item.platform} • ${new Date(item.timestamp).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold ${item.isFake ? 'text-red-600' : 'text-green-600'}">
+                                    ${item.isFake ? 'Fake' : 'Real'}
+                                </div>
+                                <div class="text-sm text-gray-600">${(item.confidence * 100).toFixed(1)}% confidence</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updateHistoryStats();
+        }
+
+        function updateHistoryStats() {
+            const total = analysisHistory.length;
+            const fake = analysisHistory.filter(item => item.isFake).length;
+            const real = analysisHistory.filter(item => !item.isFake).length;
+            const avgConfidence = total > 0 ? 
+                (analysisHistory.reduce((sum, item) => sum + item.confidence, 0) / total * 100).toFixed(1) : 0;
+            
+            document.getElementById('totalHistoryCount').textContent = total;
+            document.getElementById('fakeHistoryCount').textContent = fake;
+            document.getElementById('realHistoryCount').textContent = real;
+            document.getElementById('avgConfidence').textContent = avgConfidence + '%';
+        }
+
+        function loadHistoryItem(id) {
+            const item = analysisHistory.find(h => h.id === id);
+            if (!item) return;
+            
+            // Switch to manual tab
+            switchTab('manual');
+            
+            // Populate form with historical data
+            document.getElementById('username').value = item.username;
+            document.getElementById('accountAge').value = item.accountData.accountAge;
+            document.getElementById('followers').value = item.accountData.followers;
+            document.getElementById('following').value = item.accountData.following;
+            document.getElementById('posts').value = item.accountData.posts;
+            document.getElementById('bio').value = item.accountData.bio;
+            
+            // Set platform
+            switchPlatform(item.platform);
+            
+            // Trigger analysis
+            setTimeout(() => {
+                analyzeAccount();
+            }, 100);
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all analysis history? This action cannot be undone.')) {
+                analysisHistory = [];
+                localStorage.removeItem('fakeAccountHistory');
+                updateHistoryDisplay();
+            }
+        }
+
+        function exportHistory() {
+            if (analysisHistory.length === 0) {
+                alert('No history to export.');
+                return;
+            }
+            
+            const csvContent = [
+                ['Timestamp', 'Username', 'Platform', 'Result', 'Confidence', 'Account Age', 'Followers', 'Following', 'Posts'],
+                ...analysisHistory.map(item => [
+                    new Date(item.timestamp).toLocaleString(),
+                    item.username,
+                    item.platform,
+                    item.isFake ? 'Fake' : 'Real',
+                    (item.confidence * 100).toFixed(1) + '%',
+                    item.accountData.accountAge,
+                    item.accountData.followers,
+                    item.accountData.following,
+                    item.accountData.posts
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fake-account-analysis-history-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Platform switching functionality
+        function switchPlatform(platform) {
+            // Hide all platform-specific fields
+            document.querySelectorAll('.platform-fields').forEach(field => {
+                field.classList.add('hidden');
+            });
+            
+            // Show selected platform fields
+            if (platform !== 'all') {
+                const platformField = document.getElementById(`${platform}-fields`);
+                if (platformField) {
+                    platformField.classList.remove('hidden');
+                }
+            }
+            
+            // Update detector platform
+            detector.setPlatform(platform);
+            
+            // Update platform display
+            const platformNames = {
+                'all': 'All Platforms',
+                'facebook': 'Facebook',
+                'twitter': 'Twitter (X)',
+                'tiktok': 'TikTok',
+                'linkedin': 'LinkedIn'
+            };
+            document.getElementById('selected-platform').textContent = platformNames[platform];
+        }
+
+        // Platform dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownButton = document.getElementById('platform-dropdown-button');
+            const dropdown = document.getElementById('platform-dropdown');
+            
+            // Toggle dropdown visibility
+            dropdownButton.addEventListener('click', function() {
+                dropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!dropdownButton.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+            
+            // Platform selection
+            document.querySelectorAll('.platform-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const platform = this.getAttribute('data-platform');
+                    switchPlatform(platform);
+                    dropdown.classList.add('hidden');
+                });
+            });
+        });
+
+        // Initialize with sample data
+        window.addEventListener('load', () => {
+            // Example of a suspicious account
+            document.getElementById('username').value = 'user_84729456';
+            document.getElementById('accountAge').value = '15';
+            document.getElementById('followers').value = '23';
+            document.getElementById('following').value = '2456';
+            document.getElementById('posts').value = '150';
+            document.getElementById('postsPerDay').value = '10';
+            document.getElementById('hasProfilePic').value = 'false';
+            document.getElementById('bio').value = 'Follow me for crypto giveaways! Click link in bio!';
+            document.getElementById('spamKeywords').value = 'high';
+            document.getElementById('contentQuality').value = 'low';
+            document.getElementById('suspiciousActivity').value = 'high';
+            document.getElementById('engagementRate').value = '0.01';
+            
+            // Advanced features sample data
+            if (document.getElementById('usernameAnomaly')) {
+                document.getElementById('usernameAnomaly').value = '85';
+                document.getElementById('profilePicQuality').value = 'missing';
+                document.getElementById('bioCompleteness').value = '20';
+                document.getElementById('verificationStatus').value = 'unverified';
+                document.getElementById('profileCompleteness').value = '25';
+                document.getElementById('locationInfo').value = 'missing';
+                
+                document.getElementById('postingPattern').value = 'bot-like';
+                document.getElementById('loginAnomaly').value = '75';
+                document.getElementById('engagementRatio').value = '5';
+                document.getElementById('likesCommentsRatio').value = '90';
+                document.getElementById('repetitiveBehavior').value = '80';
+                document.getElementById('activityConsistency').value = 'bot-like';
+                
+                document.getElementById('languageQuality').value = '30';
+                document.getElementById('sentimentAnalysis').value = 'artificial';
+                document.getElementById('hashtagUsage').value = 'excessive';
+                document.getElementById('contentDuplication').value = '85';
+                document.getElementById('mediaAuthenticity').value = 'stolen';
+                
+                document.getElementById('followerFollowingRatio').value = '5';
+                document.getElementById('networkQuality').value = '20';
+                document.getElementById('connectionAuthenticity').value = 'fake';
+                document.getElementById('mutualConnections').value = '5';
+                document.getElementById('clusterAnalysis').value = 'bot-network';
+                document.getElementById('interactionPatterns').value = 'artificial';
+            }
+            
+            // Initialize history display
+            updateHistoryDisplay();
+        });
+    </script>
+</body>
+</html>

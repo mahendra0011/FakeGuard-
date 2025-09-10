@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fake Account Detector Loader</title>
+  <style>
+    html,body { height: 100%; margin: 0; }
+    #container { height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#f8fafc,#eef2ff); }
+    #loading { font: 600 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; color: #4338ca; padding: 16px; }
+    .frame { display: none; border: 0; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="loading">Loading Fake Account Detector...</div>
+    <iframe id="detector-frame" title="Fake Account Detector" class="frame" sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+  </div>
+  <script>
+    (async function(){
+      const base = location.pathname.replace(/[^\/]+$/, '');
+      const srcUrl = base + 'fake-account-detector.html';
+      try {
+        const resp = await fetch(srcUrl, { headers: { 'Accept': 'text/plain' }, cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const raw = await resp.text();
+        // Escape any raw "<" character that appears before a digit (e.g., "<1 post/day")
+        // so the HTML remains valid without modifying the source file.
+        const sanitized = raw.replace(/<(?=\d)/g, '<');
+        const iframe = document.getElementById('detector-frame');
+        iframe.srcdoc = sanitized;
+        document.getElementById('loading').style.display = 'none';
+        iframe.style.display = 'block';
+
+        // Activate a specific tab if requested via ?tab=...
+        try {
+          const params = new URLSearchParams(location.search);
+          const desiredTab = params.get('tab');
+          if (desiredTab) {
+            setTimeout(() => {
+              try {
+                const w = iframe.contentWindow;
+                if (w && typeof w.switchTab === 'function') {
+                  w.switchTab(desiredTab);
+                } else {
+                  // Fallback: click tab button by id if available
+                  const doc = iframe.contentDocument;
+                  const btn = doc && doc.getElementById(desiredTab + '-tab');
+                  if (btn) btn.click();
+                }
+              } catch (e) {
+                console.warn('Tab activation in iframe failed:', e);
+              }
+            }, 300);
+          }
+        } catch (e) {
+          console.warn('Query param parsing failed:', e);
+        }
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load detector page.';
+        console.error(e);
+      }
+    })();
+  </script>
+</body>
+</html>
